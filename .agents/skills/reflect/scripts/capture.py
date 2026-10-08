@@ -2,7 +2,7 @@
 
 Marked prompts are saved locally. Other prompts are sent, with obvious secrets
 redacted, to TypeSafe's Jev classifier via OpenRouter only when
-REFLECT_OPENROUTER_API_KEY is set.
+REFLECT_OPENROUTER_API_KEY is set in the environment or the main checkout's .env.
 """
 
 import hashlib
@@ -118,6 +118,22 @@ def state_root(cwd: str) -> Path:
     return project_root(cwd) / ".codex" / "reflect"
 
 
+def api_key(cwd: str) -> Optional[str]:
+    """Hooks don't load .env, so fall back to the main checkout's .env file."""
+    if os.environ.get(KEY_ENV):
+        return os.environ[KEY_ENV]
+    try:
+        lines = (project_root(cwd) / ".env").read_text().splitlines()
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    for line in lines:
+        name, _, value = line.strip().removeprefix("export ").partition("=")
+        value = value.strip().strip("\"'")
+        if name.strip() == KEY_ENV and value:
+            return value
+    return None
+
+
 def record_id(session_id: str, turn_id: str) -> str:
     return hashlib.sha256((session_id + "\0" + turn_id).encode()).hexdigest()
 
@@ -159,11 +175,11 @@ class Capture:
             raise ValueError("Hook prompt is missing or is not text")
         text, kind, score = remember_text(prompt), "explicit", None
         if text is None:
-            api_key = os.environ.get(KEY_ENV)
-            if not api_key:
+            key = api_key(str(event.get("cwd") or ""))
+            if not key:
                 return None
             text, kind = redact(prompt)[:MAX_CHARS], "detected"
-            score = classify(text, api_key)
+            score = classify(text, key)
             if score < THRESHOLD:
                 return None
         for key in ("session_id", "turn_id", "cwd"):
@@ -214,9 +230,9 @@ def main() -> None:
     try:
         event = json.load(sys.stdin)
         prompt = event.get("prompt")
-        # Skip the Git lookup for prompts that can never be captured.
+        # Skip prompts that can never be captured.
         if not isinstance(prompt, str) or (
-            remember_text(prompt) is None and not os.environ.get(KEY_ENV)
+            remember_text(prompt) is None and not api_key(event["cwd"])
         ):
             return
         root = state_root(event["cwd"])

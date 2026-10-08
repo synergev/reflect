@@ -309,6 +309,17 @@ class ReflectTests(unittest.TestCase):
         self.assertEqual((item["kind"], item["score"]), ("detected", 0.93))
         self.assertEqual(item["text"], body["state"])
 
+    def test_api_key_prefers_environment_then_project_env_file(self):
+        env = self.home / ".env"
+        with patch.object(capture, "project_root", return_value=self.home):
+            self.assertIsNone(capture.api_key(str(self.home)))
+            env.write_text('OTHER=1\nexport REFLECT_OPENROUTER_API_KEY="from-file"\n')
+            self.assertEqual(capture.api_key(str(self.home)), "from-file")
+            os.environ["REFLECT_OPENROUTER_API_KEY"] = "from-env"
+            self.assertEqual(capture.api_key(str(self.home)), "from-env")
+        del os.environ["REFLECT_OPENROUTER_API_KEY"]
+        self.assertIsNone(capture.api_key(str(self.home / "not-a-repo")))
+
     def test_marker_and_missing_key_never_call_jev(self):
         root = self.home / "reflect"
         with patch.object(capture.urllib.request, "urlopen") as call:

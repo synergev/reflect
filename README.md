@@ -29,8 +29,9 @@ Requires Python 3.9+, Git, macOS/Linux, and Codex with hooks.
    `.codex/hooks.json`, then review and trust them in Codex's `/hooks`.
 3. Add `/.codex/reflect/` to the project's `.gitignore`. Captures and review
    decisions live there, in the main checkout, shared by all worktrees.
-4. Optional: create a dedicated OpenRouter key and export it as
-   `REFLECT_OPENROUTER_API_KEY` to enable detection. TypeSafe is the only
+4. Optional: create a dedicated OpenRouter key and set
+   `REFLECT_OPENROUTER_API_KEY` in the environment or the main checkout's
+   gitignored `.env` to enable detection. TypeSafe is the only
    provider serving Jev and its data retention terms are not published;
    confirm them before enabling.
 5. Optional daily report:
