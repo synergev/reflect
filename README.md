@@ -10,8 +10,8 @@ A Codex skill that captures feedback and proposes durable guidance (e.g.
 
 - **Capture**: a `UserPromptSubmit` hook saves messages starting with
   `remember` / `please remember`. With `TYPESAFE_API_KEY` set, other messages
-  are redacted (keys, tokens, passwords, credentials) and classified by
-  TypeSafe's Jev model; likely lessons (score ≥ 0.8) are saved too. Only
+  get best-effort redaction of common credential formats and are classified
+  by TypeSafe's Jev model; likely lessons (score ≥ 0.8) are saved too. Only
   candidates are stored, never full conversations.
 - **Reminder**: a `SessionStart` hook tells the agent how many captures are
   unreviewed, so the user is prompted to reflect.

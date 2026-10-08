@@ -32,18 +32,37 @@ LESSON = {
         "false": "A task request, question, or reply that only matters right now.",
     },
 }
+# Best-effort: covers common pasted formats, not every credential shape.
+SECRET_NAME = r"[\w.-]*(?:key|token|secret|passw(?:or)?d)[\w.-]*"
 SECRETS = [
     (
         re.compile(
-            r"(?im)^(\s*(?:export\s+)?[\w.-]*(?:key|token|secret|passw(?:or)?d)"
-            r"[\w.-]*\s*[=:]\s*).+$"
+            r"-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*?"
+            r"(?:-----END[A-Z ]*PRIVATE KEY-----|\Z)"
+        ),
+        "[REDACTED]",
+    ),
+    # Inline pairs in JSON, YAML, dicts, and call arguments.
+    (
+        re.compile(
+            r"(?i)(\b" + SECRET_NAME + r"[\"']?[ \t]*[=:][ \t]*)"
+            r"(\"[^\"\n]*\"|'[^'\n]*'|[^\s,;})\]]+)"
+        ),
+        r"\1[REDACTED]",
+    ),
+    # Whole-line values, which may contain spaces.
+    (
+        re.compile(
+            r"(?im)^([ \t]*(?:export[ \t]+)?" + SECRET_NAME + r"[ \t]*[=:][ \t]*)\S.*$"
         ),
         r"\1[REDACTED]",
     ),
     (re.compile(r"(?i)\bbearer\s+[\w.~+/=-]+"), "Bearer [REDACTED]"),
+    (re.compile(r"(?m)((?:^|\s)(?:-u|--user)[ \t=]+[^\s:]+:)\S+"), r"\1[REDACTED]"),
     (
         re.compile(
             r"\b(?:sk|pk|rk)-[\w-]{16,}|\bgh[pousr]_\w{20,}|\bxox[abpr]-[\w-]{10,}"
+            r"|\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"
         ),
         "[REDACTED]",
     ),

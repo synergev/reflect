@@ -323,6 +323,10 @@ class ReflectTests(unittest.TestCase):
 
     def test_redact_removes_common_secrets_and_keeps_prose(self):
         jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.c2lnbmF0dXJlLXZhbHVl"
+        pem = (
+            "key:\n-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA\nxyz\n"
+            "-----END RSA PRIVATE KEY-----"
+        )
         for text, secret in [
             ("OPENAI_API_KEY=abc123secret", "abc123secret"),
             ("  export db_password: hunter2", "hunter2"),
@@ -332,10 +336,21 @@ class ReflectTests(unittest.TestCase):
             ("xoxb-1234567890-abcdefghij", "1234567890-abcdefghij"),
             ("jwt " + jwt, jwt),
             ("postgresql://postgres:s3cret@localhost:5432/db", "s3cret"),
+            ('{"api_key":"supersecret"}', "supersecret"),
+            ("config = {'password': 'hunter 2', 'x': 1}", "hunter 2"),
+            ("client.login(user=me, token=abc123xyz)", "abc123xyz"),
+            ("curl -u admin:password https://x", "password"),
+            ("curl --user admin:pa55 https://x", "pa55"),
+            (pem, "MIIEowIBAAKCAQEA"),
+            (pem.rsplit("\n", 1)[0], "MIIEowIBAAKCAQEA"),
+            ("aws key AKIAIOSFODNN7EXAMPLE", "AKIAIOSFODNN7EXAMPLE"),
         ]:
             with self.subTest(text=text):
                 self.assertNotIn(secret, capture.redact(text))
         self.assertIn("localhost:5432", capture.redact("x://u:p@localhost:5432"))
+        self.assertIn(
+            '"region": "us"', capture.redact('{"api_key": "s", "region": "us"}')
+        )
         prose = "Primary key is station_id; always use CAST(:x AS type)."
         self.assertEqual(capture.redact(prose), prose)
 
