@@ -1,0 +1,20 @@
+{
+  "name": "agent-auto-evolve",
+  "interface": {
+    "displayName": "Agent Auto Evolve"
+  },
+  "plugins": [
+    {
+      "name": "reflect",
+      "source": {
+        "source": "local",
+        "path": "./plugins/reflect"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

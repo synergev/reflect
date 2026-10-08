@@ -9,21 +9,23 @@ Use the active model to analyze captured feedback when requested. Capture is
 quiet and never blocks the user. A session-start hook mentions unreviewed
 captures so they aren't forgotten.
 
-## Project setup and storage
+## Setup and storage
 
-Requires Python 3.9+, Git, and macOS/Linux. Keep this skill in the repository's
-`.agents/skills/reflect`; Git checks out its code in each worktree.
+Requires Python 3.9+, Git, and macOS/Linux. Installed as the `reflect` plugin
+from the `agent-auto-evolve` marketplace; the plugin bundles this skill and its
+hooks, so projects need no copy of either.
 
 Store captures and review decisions in `.codex/reflect/` under the **main project
-checkout**, ignored by Git. The helper uses local `git worktree list` to find that
-checkout from any worktree or subdirectory. Worktrees share one inbox; separate
-clones have separate inboxes. No remote addresses or cross-project scans are used.
+checkout**. The folder writes its own `.gitignore`, so feedback is never committed.
+The helper uses local `git worktree list` to find that checkout from any worktree
+or subdirectory. Worktrees share one inbox; separate clones have separate inboxes.
+No remote addresses or cross-project scans are used.
 
-The repository's `.codex/hooks.json` registers the asynchronous `UserPromptSubmit`
-capture handler and a `SessionStart` handler (`reflect.py nudge`), preserving
-existing hooks. Both run the skill from the current checkout. Review and trust it through Codex's normal `/hooks`
-interface. Disable any old personal Reflect capture hook before enabling this one.
-Never commit private feedback or machine-specific absolute paths.
+The plugin's `hooks/hooks.json` registers the asynchronous `UserPromptSubmit`
+capture handler and a `SessionStart` handler (`reflect.py nudge`). Review and
+trust them through Codex's normal `/hooks` interface. Remove any project-level
+copy of these hooks so captures don't run twice. Never commit private feedback or
+machine-specific absolute paths.
 
 Run checks from the skill directory:
 `python3 -B -m unittest discover -s scripts -p 'test_*.py' -v`.

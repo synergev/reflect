@@ -16,7 +16,7 @@ from typing import Optional
 # Preview must not create bytecode files.
 sys.dont_write_bytecode = True
 
-from capture import Capture, atomic_json, record_id, state_root
+from capture import Capture, atomic_json, ensure_state, record_id, state_root
 
 
 def time_value(value: str) -> datetime:
@@ -106,7 +106,7 @@ class Review:
 
 
 def save_review(root: Path, review: Review) -> dict:
-    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    ensure_state(root)
     path = root / "reviews" / (record_id("lesson", review.key) + ".json")
     # Serializes only explicit ledger writes; capture uses independent files.
     with (root / ".review.lock").open("a") as lock:

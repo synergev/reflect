@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "reflect",
+  "version": "0.1.0",
+  "description": "Capture lessons from conversations and turn them into reviewed project guidance.",
+  "repository": "https://github.com/synergev/agent-auto-evolve",
+  "license": "MIT",
+  "keywords": ["memory", "feedback", "agents-md", "hooks"],
+  "interface": {
+    "displayName": "Reflect",
+    "shortDescription": "Learn lessons from conversations",
+    "category": "Productivity",
+    "capabilities": ["Instructions", "Lifecycle hooks"]
+  }
+}

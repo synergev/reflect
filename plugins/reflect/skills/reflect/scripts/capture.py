@@ -138,6 +138,14 @@ def record_id(session_id: str, turn_id: str) -> str:
     return hashlib.sha256((session_id + "\0" + turn_id).encode()).hexdigest()
 
 
+def ensure_state(root: Path) -> None:
+    """Create the state folder, ignored by Git so feedback is never committed."""
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    ignore = root / ".gitignore"
+    if not ignore.exists():
+        ignore.write_text("*\n")
+
+
 def atomic_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     fd, name = tempfile.mkstemp(dir=path.parent, prefix=".reflect-")
@@ -208,6 +216,7 @@ def capture(event: dict, root: Path) -> None:
     path = root / "queue" / (candidate.id + ".json")
     # A hard link publishes a complete record only if the turn does not exist.
     # Unlike replace, concurrent redelivery cannot overwrite the first capture.
+    ensure_state(root)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     fd, name = tempfile.mkstemp(dir=path.parent, prefix=".capture-")
     try:
@@ -242,6 +251,7 @@ def main() -> None:
         if root is None:
             return
         try:
+            ensure_state(root)
             atomic_json(
                 root / "capture-error.json",
                 {

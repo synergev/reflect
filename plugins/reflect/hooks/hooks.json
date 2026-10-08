@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -B \"$(git rev-parse --show-toplevel)/.agents/skills/reflect/scripts/capture.py\"",
+            "command": "python3 -B \"${PLUGIN_ROOT}/skills/reflect/scripts/capture.py\"",
             "async": true,
             "timeout": 10
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -B \"$(git rev-parse --show-toplevel)/.agents/skills/reflect/scripts/reflect.py\" nudge",
+            "command": "python3 -B \"${PLUGIN_ROOT}/skills/reflect/scripts/reflect.py\" nudge",
             "timeout": 3
           }
         ]

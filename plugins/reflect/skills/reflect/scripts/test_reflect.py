@@ -217,23 +217,19 @@ class ReflectTests(unittest.TestCase):
                 capture.main()
         self.assertEqual(len(list((root / "queue").glob("*.json"))), 2)
         self.assertFalse((tree / ".codex/reflect").exists())
-        script = tree / ".agents/skills/reflect/scripts/capture.py"
-        script.parent.mkdir(parents=True)
-        script.write_text(Path(capture.__file__).read_text())
-        config = Path(__file__).resolve().parents[4] / ".codex/hooks.json"
-        hook = json.loads(config.read_text())["hooks"]["UserPromptSubmit"][-1]["hooks"][
-            0
-        ]
+        plugin = Path(__file__).resolve().parents[3]
+        hooks = json.loads((plugin / "hooks/hooks.json").read_text())["hooks"]
         tools = self.home / "bin"
         tools.mkdir()
         (tools / "python3").symlink_to(sys.executable)
         (tools / "git").symlink_to(shutil.which("git"))
+        env = dict(os.environ, PATH=str(tools), PLUGIN_ROOT=str(plugin))
         for prompt in ("please remember: use X", "ordinary request"):
             result = subprocess.run(
-                hook["command"],
+                hooks["UserPromptSubmit"][-1]["hooks"][0]["command"],
                 shell=True,
                 cwd=tree,
-                env=dict(os.environ, PATH=str(tools)),
+                env=env,
                 text=True,
                 input=json.dumps(
                     dict(self.event, cwd=str(tree), turn_id="hook", prompt=prompt)
@@ -243,13 +239,13 @@ class ReflectTests(unittest.TestCase):
             )
             self.assertEqual(result.stdout + result.stderr, "")
         self.assertEqual(len(list((root / "queue").glob("*.json"))), 3)
-        (script.parent / "reflect.py").write_text(Path(reflect.__file__).read_text())
-        start = json.loads(config.read_text())["hooks"]["SessionStart"][-1]["hooks"][0]
+        # Captures must never show up as changes in the user's project.
+        self.assertEqual(git("-C", repo, "status", "--porcelain").stdout, b"")
         result = subprocess.run(
-            start["command"],
+            hooks["SessionStart"][-1]["hooks"][0]["command"],
             shell=True,
             cwd=tree,
-            env=dict(os.environ, PATH=str(tools)),
+            env=env,
             text=True,
             input=json.dumps(dict(self.event, cwd=str(tree), source="startup")),
             capture_output=True,
