@@ -26,7 +26,7 @@ class ReflectTests(unittest.TestCase):
         environ = patch.dict(os.environ)
         environ.start()
         self.addCleanup(environ.stop)
-        os.environ.pop("TYPESAFE_API_KEY", None)
+        os.environ.pop("REFLECT_OPENROUTER_API_KEY", None)
         self.event = {
             "hook_event_name": "UserPromptSubmit",
             "session_id": "s1",
@@ -291,16 +291,17 @@ class ReflectTests(unittest.TestCase):
             self.event,
             prompt="Use CAST(:x AS type) with asyncpg\nexport DB_PASSWORD=hunter2",
         )
-        os.environ["TYPESAFE_API_KEY"] = "test-key"
+        os.environ["REFLECT_OPENROUTER_API_KEY"] = "test-key"
         with self.jev(capture.THRESHOLD - 0.01):
             capture.capture(event, root)
         self.assertFalse((root / "queue").exists())
         with self.jev(0.93) as call:
             capture.capture(event, root)
         request = call.call_args[0][0]
-        self.assertEqual(request.full_url, capture.TYPESAFE_URL)
+        self.assertEqual(request.full_url, "https://openrouter.ai/api/v1/systemone")
         self.assertEqual(request.get_header("Authorization"), "Bearer test-key")
         body = json.loads(request.data)
+        self.assertEqual(body["model"], "~typesafe/jev-latest")
         self.assertEqual(body["questions"]["lesson"]["type"], "noul")
         self.assertIn("CAST(:x AS type)", body["state"])
         self.assertNotIn("hunter2", body["state"])
@@ -313,7 +314,7 @@ class ReflectTests(unittest.TestCase):
         with patch.object(capture.urllib.request, "urlopen") as call:
             capture.capture(self.event, root)
             capture.capture(dict(self.event, turn_id="t2", prompt="ordinary"), root)
-            os.environ["TYPESAFE_API_KEY"] = "test-key"
+            os.environ["REFLECT_OPENROUTER_API_KEY"] = "test-key"
             capture.capture(dict(self.event, turn_id="t3"), root)
         call.assert_not_called()
         self.assertEqual(
@@ -356,12 +357,12 @@ class ReflectTests(unittest.TestCase):
 
     def test_jev_failures_are_quiet(self):
         root = self.home / ".codex/reflect"
-        os.environ["TYPESAFE_API_KEY"] = "test-key"
+        os.environ["REFLECT_OPENROUTER_API_KEY"] = "test-key"
         for failure in (
             dict(side_effect=urllib.error.URLError("offline")),
             dict(
                 side_effect=urllib.error.HTTPError(
-                    capture.TYPESAFE_URL, 529, "Overloaded", {}, None
+                    capture.JEV_URL, 529, "Overloaded", {}, None
                 )
             ),
             dict(return_value=io.BytesIO(b"{}")),

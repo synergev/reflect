@@ -9,10 +9,11 @@ A Codex skill that captures feedback and proposes durable guidance (e.g.
 `AGENTS.md` edits) through a normal PR.
 
 - **Capture**: a `UserPromptSubmit` hook saves messages starting with
-  `remember` / `please remember`. With `TYPESAFE_API_KEY` set, other messages
-  get best-effort redaction of common credential formats and are classified
-  by TypeSafe's Jev model; likely lessons (score ≥ 0.8) are saved too. Only
-  candidates are stored, never full conversations.
+  `remember` / `please remember`. With `REFLECT_OPENROUTER_API_KEY` set, other
+  messages get best-effort redaction of common credential formats and are
+  classified by TypeSafe's Jev model via OpenRouter; likely lessons
+  (score ≥ 0.8) are saved too. Only candidates are stored, never full
+  conversations.
 - **Reminder**: a `SessionStart` hook tells the agent how many captures are
   unreviewed, so the user is prompted to reflect.
 - **Reflect**: ask the agent to "reflect", "reflect on past conversations",
@@ -28,8 +29,10 @@ Requires Python 3.9+, Git, macOS/Linux, and Codex with hooks.
    `.codex/hooks.json`, then review and trust them in Codex's `/hooks`.
 3. Add `/.codex/reflect/` to the project's `.gitignore`. Captures and review
    decisions live there, in the main checkout, shared by all worktrees.
-4. Optional: export `TYPESAFE_API_KEY` to enable detection. TypeSafe's data
-   retention terms are not published; confirm them before enabling.
+4. Optional: create a dedicated OpenRouter key and export it as
+   `REFLECT_OPENROUTER_API_KEY` to enable detection. TypeSafe is the only
+   provider serving Jev and its data retention terms are not published;
+   confirm them before enabling.
 5. Optional daily report:
    ```
    0 8 * * * cd <main-checkout> && codex exec --sandbox workspace-write 'Use $reflect to write the daily report.'

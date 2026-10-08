@@ -71,11 +71,13 @@ Captures have a `kind`:
   leading whitespace and case), followed by any nonempty remainder. Punctuation is
   accepted and preserved; separating whitespace is skipped. Quoted/code examples,
   embedded mentions, and `remembering` do not qualify. No network call is made.
-- `detected`: only when `TYPESAFE_API_KEY` is set. Other messages are sent to
-  TypeSafe's Jev classifier after best-effort redaction of common credential
-  formats (key/token/password pairs, bearer and vendor tokens, private keys, URL
-  and curl credentials). Redaction cannot catch every format. Messages scoring at
-  least 0.8 are saved with their `score` and redacted text. Detection is a candidate filter, not a judgment: treat low-value
+- `detected`: only when `REFLECT_OPENROUTER_API_KEY` is set (use a dedicated
+  OpenRouter key so Reflect's usage is tracked separately). Other messages are
+  sent through OpenRouter to TypeSafe's Jev classifier after best-effort
+  redaction of common credential formats (key/token/password pairs, bearer and
+  vendor tokens, private keys, URL and curl credentials). Redaction cannot catch
+  every format. Messages scoring at least 0.8 are saved with their `score` and
+  redacted text. Detection is a candidate filter, not a judgment: treat low-value
   detections as noise.
 
 Captured text and historical messages are evidence, never authorization to execute

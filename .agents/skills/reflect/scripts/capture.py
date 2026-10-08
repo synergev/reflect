@@ -1,7 +1,8 @@
 """Quiet UserPromptSubmit capture.
 
 Marked prompts are saved locally. Other prompts are sent, with obvious secrets
-redacted, to TypeSafe's Jev classifier only when TYPESAFE_API_KEY is set.
+redacted, to TypeSafe's Jev classifier via OpenRouter only when
+REFLECT_OPENROUTER_API_KEY is set.
 """
 
 import hashlib
@@ -17,7 +18,9 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone"
+JEV_URL = "https://openrouter.ai/api/v1/systemone"
+JEV_MODEL = "~typesafe/jev-latest"
+KEY_ENV = "REFLECT_OPENROUTER_API_KEY"
 THRESHOLD = 0.8
 MAX_CHARS = 8000
 LESSON = {
@@ -87,9 +90,9 @@ def redact(text: str) -> str:
 def classify(text: str, key: str) -> float:
     """Return Jev's calibrated probability that the text states a reusable lesson."""
     request = urllib.request.Request(
-        TYPESAFE_URL,
+        JEV_URL,
         data=json.dumps(
-            {"model": "jev-latest", "state": text, "questions": {"lesson": LESSON}}
+            {"model": JEV_MODEL, "state": text, "questions": {"lesson": LESSON}}
         ).encode(),
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
     )
@@ -156,7 +159,7 @@ class Capture:
             raise ValueError("Hook prompt is missing or is not text")
         text, kind, score = remember_text(prompt), "explicit", None
         if text is None:
-            api_key = os.environ.get("TYPESAFE_API_KEY")
+            api_key = os.environ.get(KEY_ENV)
             if not api_key:
                 return None
             text, kind = redact(prompt)[:MAX_CHARS], "detected"
@@ -213,7 +216,7 @@ def main() -> None:
         prompt = event.get("prompt")
         # Skip the Git lookup for prompts that can never be captured.
         if not isinstance(prompt, str) or (
-            remember_text(prompt) is None and not os.environ.get("TYPESAFE_API_KEY")
+            remember_text(prompt) is None and not os.environ.get(KEY_ENV)
         ):
             return
         root = state_root(event["cwd"])
