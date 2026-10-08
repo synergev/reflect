@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reflect"
+  short_description: "Review captured and detected feedback and propose durable guidance"
+  default_prompt: "Use $reflect to review captured feedback in this conversation."
