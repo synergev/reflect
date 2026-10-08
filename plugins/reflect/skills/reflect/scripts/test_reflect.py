@@ -223,7 +223,7 @@ class ReflectTests(unittest.TestCase):
         tools.mkdir()
         (tools / "python3").symlink_to(sys.executable)
         (tools / "git").symlink_to(shutil.which("git"))
-        env = dict(os.environ, PATH=str(tools), PLUGIN_ROOT=str(plugin))
+        env = dict(os.environ, PATH=str(tools), CLAUDE_PLUGIN_ROOT=str(plugin))
         for prompt in ("please remember: use X", "ordinary request"):
             result = subprocess.run(
                 hooks["UserPromptSubmit"][-1]["hooks"][0]["command"],
