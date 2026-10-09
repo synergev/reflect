@@ -54,7 +54,10 @@ Run `scripts/reflect.py` with `python3 -B` using its absolute path. Commands ope
 on the current project; pass `--cwd <checkout-directory>` when needed.
 
 1. Read `reviews`, following `next_offset`, to avoid repeating dismissed or already
-   proposed lessons without materially new evidence.
+   proposed lessons without materially new evidence. For each `proposed` review
+   with a `pr_url`, check `gh pr view <pr_url> --json state,mergedAt`: save it as
+   `adopted` when merged, leave it while open, and return it to `pending` with the
+   reason when closed unmerged. Preview and the daily report only list these.
 2. Run `sources --session <task-id>` for the current task. It defaults to
    `CODEX_THREAD_ID`; never substitute the newest task if the ID is missing.
 3. Run `sources --past` for past captures. Optional `--since` and `--until` are
