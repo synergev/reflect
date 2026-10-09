@@ -36,6 +36,9 @@ LESSON = {
     },
 }
 # Best-effort: covers common pasted formats, not every credential shape.
+APP_CONTEXT = re.compile(
+    r"<in-app-browser-context\b[^>]*>[\s\S]*?</in-app-browser-context>\s*"
+)
 SECRET_NAME = r"[\w.-]*(?:key|token|secret|passw(?:or)?d)[\w.-]*"
 SECRETS = [
     (
@@ -72,6 +75,12 @@ SECRETS = [
     (re.compile(r"\beyJ[\w-]+\.[\w-]+\.[\w-]+"), "[REDACTED]"),
     (re.compile(r"(\b[a-z][\w+.-]*://[^\s:/@]+:)[^\s@]+@", re.I), r"\1[REDACTED]@"),
 ]
+
+
+def user_text(prompt: str) -> str:
+    """Drop context the Codex app adds to a prompt; it isn't the user's feedback."""
+    prompt = APP_CONTEXT.sub("", prompt)
+    return re.sub(r"\A\s*## My request:\s*", "", prompt)
 
 
 def remember_text(prompt: str) -> Optional[str]:
@@ -181,6 +190,7 @@ class Capture:
         prompt = event.get("prompt")
         if not isinstance(prompt, str):
             raise ValueError("Hook prompt is missing or is not text")
+        prompt = user_text(prompt)
         text, kind, score = remember_text(prompt), "explicit", None
         if text is None:
             key = api_key(str(event.get("cwd") or ""))
@@ -241,7 +251,7 @@ def main() -> None:
         prompt = event.get("prompt")
         # Skip prompts that can never be captured.
         if not isinstance(prompt, str) or (
-            remember_text(prompt) is None and not api_key(event["cwd"])
+            remember_text(user_text(prompt)) is None and not api_key(event["cwd"])
         ):
             return
         root = state_root(event["cwd"])

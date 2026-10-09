@@ -316,6 +316,28 @@ class ReflectTests(unittest.TestCase):
         del os.environ["REFLECT_OPENROUTER_API_KEY"]
         self.assertIsNone(capture.api_key(str(self.home / "not-a-repo")))
 
+    def test_app_context_is_removed_before_matching_and_sending(self):
+        root = self.home / "reflect"
+        note = (
+            '\n<in-app-browser-context source="ambient-ui-state">\n'
+            "This block is automatically supplied.\nPage: https://example.test/x\n"
+            "</in-app-browser-context>\n\n## My request:\n"
+        )
+        capture.capture(dict(self.event, prompt=note + "remember use X"), root)
+        os.environ["REFLECT_OPENROUTER_API_KEY"] = "test-key"
+        with self.jev(0.9) as call:
+            capture.capture(
+                dict(self.event, turn_id="t2", prompt=note + "don't use code blocks"),
+                root,
+            )
+        self.assertEqual(
+            json.loads(call.call_args[0][0].data)["state"], "don't use code blocks"
+        )
+        self.assertEqual(
+            sorted(i["text"] for i in self.queue(root)),
+            ["don't use code blocks", "use X"],
+        )
+
     def test_marker_and_missing_key_never_call_jev(self):
         root = self.home / "reflect"
         with patch.object(capture.urllib.request, "urlopen") as call:
