@@ -1,4 +1,4 @@
-# agent-auto-evolve
+# Reflect
 
 Codex plugins that let a coding agent learn from its conversations and turn
 lessons into reviewed, project-level guidance.
@@ -28,11 +28,11 @@ worktrees). That folder ignores itself in Git.
 Requires Python 3.9+, Git, macOS/Linux, and Codex.
 
 ```bash
-codex plugin marketplace add synergev/agent-auto-evolve --ref v0.1.1
+codex plugin marketplace add synergev/reflect --ref v0.1.2
 ```
 
 ```bash
-codex plugin add reflect@agent-auto-evolve
+codex plugin add reflect@reflect
 ```
 
 Then start a new session, and review and trust the plugin's two hooks in
@@ -43,12 +43,27 @@ Optional:
 
 - **Detection**: create a dedicated OpenRouter key and set
   `REFLECT_OPENROUTER_API_KEY` in the environment or the project's gitignored
-  `.env`. Requests ask OpenRouter for Zero Data Retention routing, so they
-  fail rather than reach an endpoint that retains prompts.
+  `.env` (a committed `.env` is ignored). Requests ask OpenRouter for Zero Data
+  Retention routing, so they fail rather than reach an endpoint that retains
+  prompts.
 - **Daily report**:
   ```
   0 8 * * * cd <main-checkout> && codex exec --sandbox workspace-write 'Use $reflect to write the daily report.'
   ```
+
+### Security and privacy
+
+- Once installed, the hooks run in every project you open with Codex. Without a
+  key, nothing leaves your machine.
+- With detection on, your messages (after best-effort credential redaction) are
+  sent to OpenRouter. Redaction does not catch every secret format or personal
+  data. Leave detection off in projects where that matters.
+- Lessons land in `AGENTS.md`, which steers every agent in the repository.
+  Review them like code: a lesson can come from content pasted into a chat.
+- Reflect ignores a `.env` or `.codex/reflect/` folder committed to a
+  repository, so a cloned project can't supply its own key or fake feedback.
+
+Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
 
 ### Tests
 
