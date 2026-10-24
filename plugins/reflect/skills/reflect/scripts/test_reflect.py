@@ -317,6 +317,35 @@ class ReflectTests(unittest.TestCase):
         del os.environ["REFLECT_OPENROUTER_API_KEY"]
         self.assertIsNone(capture.api_key(str(self.home / "not-a-repo")))
 
+    def test_marked_feedback_is_redacted_too(self):
+        candidate = capture.Capture.from_event(
+            dict(self.event, prompt="remember the staging DB_PASSWORD=hunter2 is shared")
+        )
+        self.assertEqual(candidate.kind, "explicit")
+        self.assertIn("the staging DB_PASSWORD=", candidate.text)
+        self.assertNotIn("hunter2", candidate.text)
+
+    def test_cloned_repository_cannot_supply_key_or_feedback(self):
+        repo = self.home / "cloned"
+
+        def git(*args):
+            return subprocess.run(
+                ["git", "-C", repo, *map(str, args)], check=True, capture_output=True
+            )
+
+        repo.mkdir()
+        git("init")
+        (repo / ".env").write_text("REFLECT_OPENROUTER_API_KEY=from-repo\n")
+        self.assertEqual(capture.api_key(str(repo)), "from-repo")
+        self.assertEqual(capture.state_root(str(repo)), (repo / ".codex/reflect").resolve())
+        planted = repo / ".codex/reflect/queue/planted.json"
+        planted.parent.mkdir(parents=True)
+        planted.write_text("{}")
+        git("add", "-f", ".env", planted)
+        self.assertIsNone(capture.api_key(str(repo)))
+        with self.assertRaises(ValueError):
+            capture.state_root(str(repo))
+
     def test_app_context_is_removed_before_matching_and_sending(self):
         root = self.home / "reflect"
         note = (

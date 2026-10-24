@@ -1,8 +1,9 @@
 """Quiet UserPromptSubmit capture.
 
-Marked prompts are saved locally. Other prompts are sent, with obvious secrets
-redacted, to TypeSafe's Jev classifier via OpenRouter only when
-REFLECT_OPENROUTER_API_KEY is set in the environment or the main checkout's .env.
+Marked prompts are saved locally with obvious secrets redacted. Other prompts are
+sent, redacted the same way, to TypeSafe's Jev classifier via OpenRouter only when
+REFLECT_OPENROUTER_API_KEY is set in the environment or the main checkout's
+uncommitted .env.
 """
 
 import hashlib
@@ -129,16 +130,34 @@ def project_root(cwd: str) -> Path:
     return Path(first[0][len("worktree ") :]).resolve()
 
 
+def tracked(root: Path, path: str) -> bool:
+    """Committed files come from whoever wrote the repository, not this user."""
+    result = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "--", path],
+        capture_output=True,
+        text=True,
+        timeout=2,
+    )
+    return bool(result.stdout.strip())
+
+
 def state_root(cwd: str) -> Path:
-    return project_root(cwd) / ".codex" / "reflect"
+    root = project_root(cwd)
+    if tracked(root, ".codex/reflect"):
+        raise ValueError("Reflect state is committed to this repository; ignoring it")
+    return root / ".codex" / "reflect"
 
 
 def api_key(cwd: str) -> Optional[str]:
-    """Hooks don't load .env, so fall back to the main checkout's .env file."""
+    """Hooks don't load .env, so fall back to the main checkout's own .env file."""
     if os.environ.get(KEY_ENV):
         return os.environ[KEY_ENV]
     try:
-        lines = (project_root(cwd) / ".env").read_text().splitlines()
+        root = project_root(cwd)
+        # A committed .env could route this user's prompts to someone else's key.
+        if tracked(root, ".env"):
+            return None
+        lines = (root / ".env").read_text().splitlines()
     except (OSError, ValueError, subprocess.SubprocessError):
         return None
     for line in lines:
@@ -206,6 +225,8 @@ class Capture:
             score = classify(text, key)
             if score < THRESHOLD:
                 return None
+        else:
+            text = redact(text)
         for key in ("session_id", "turn_id", "cwd"):
             if not isinstance(event.get(key), str) or not event[key].strip():
                 raise ValueError("Hook is missing " + key)
