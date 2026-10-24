@@ -1,6 +1,6 @@
 {
   "name": "reflect",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Capture lessons from conversations and turn them into reviewed project guidance.",
   "repository": "https://github.com/synergev/agent-auto-evolve",
   "license": "MIT",

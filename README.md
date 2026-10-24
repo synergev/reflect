@@ -28,7 +28,7 @@ worktrees). That folder ignores itself in Git.
 Requires Python 3.9+, Git, macOS/Linux, and Codex.
 
 ```bash
-codex plugin marketplace add synergev/agent-auto-evolve --ref v0.1.0
+codex plugin marketplace add synergev/agent-auto-evolve --ref v0.1.1
 ```
 
 ```bash
