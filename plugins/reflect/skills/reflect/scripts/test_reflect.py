@@ -299,6 +299,7 @@ class ReflectTests(unittest.TestCase):
         body = json.loads(request.data)
         self.assertEqual(body["model"], "~typesafe/jev-latest")
         self.assertEqual(body["questions"]["lesson"]["type"], "noul")
+        self.assertEqual(body["provider"], {"zdr": True})
         self.assertIn("CAST(:x AS type)", body["state"])
         self.assertNotIn("hunter2", body["state"])
         [item] = self.queue(root)

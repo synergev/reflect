@@ -101,7 +101,13 @@ def classify(text: str, key: str) -> float:
     request = urllib.request.Request(
         JEV_URL,
         data=json.dumps(
-            {"model": JEV_MODEL, "state": text, "questions": {"lesson": LESSON}}
+            {
+                "model": JEV_MODEL,
+                "state": text,
+                "questions": {"lesson": LESSON},
+                # Fail rather than route to an endpoint that retains prompts.
+                "provider": {"zdr": True},
+            }
         ).encode(),
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
     )

@@ -79,7 +79,8 @@ Captures have a `kind`:
 - `detected`: only when `REFLECT_OPENROUTER_API_KEY` is set in the environment
   or the main checkout's `.env` (use a dedicated OpenRouter key so Reflect's
   usage is tracked separately). Other messages are
-  sent through OpenRouter to TypeSafe's Jev classifier after best-effort
+  sent through OpenRouter, restricted to Zero Data Retention endpoints, to
+  TypeSafe's Jev classifier after best-effort
   redaction of common credential formats (key/token/password pairs, bearer and
   vendor tokens, private keys, URL and curl credentials). Redaction cannot catch
   every format. Messages scoring at least 0.8 are saved with their `score` and

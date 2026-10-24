@@ -43,8 +43,8 @@ Optional:
 
 - **Detection**: create a dedicated OpenRouter key and set
   `REFLECT_OPENROUTER_API_KEY` in the environment or the project's gitignored
-  `.env`. TypeSafe is the only provider serving Jev and its data retention terms
-  are not published; confirm them before enabling.
+  `.env`. Requests ask OpenRouter for Zero Data Retention routing, so they
+  fail rather than reach an endpoint that retains prompts.
 - **Daily report**:
   ```
   0 8 * * * cd <main-checkout> && codex exec --sandbox workspace-write 'Use $reflect to write the daily report.'
